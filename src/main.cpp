@@ -11,27 +11,51 @@
 #define rightmostSensor PC1
 
 void robotStop(){
-    digitalWrite(leftMotorForward, HIGH);
-    digitalWrite(rightMotorForward, HIGH);
-    digitalWrite(leftMotorBackward, HIGH);
-    digitalWrite(rightMotorBackward, HIGH);
+    digitalWrite(leftMotorForward, 255);
+    digitalWrite(rightMotorForward, 255);
+    digitalWrite(leftMotorBackward, 255);
+    digitalWrite(rightMotorBackward, 255);
 }
 
-void setup() {
+void robotForward(){
+    digitalWrite(leftMotorForward, 255);
+    digitalWrite(rightMotorForward, 255);
+    digitalWrite(leftMotorBackward, 0);
+    digitalWrite(rightMotorBackward, 0);
+}
+
+void robotLeft(char turnRate){ //use char for memory saving
+    digitalWrite(leftMotorForward, 255);
+    digitalWrite(rightMotorForward, 255-turnRate);
+    digitalWrite(leftMotorBackward, 0);
+    digitalWrite(rightMotorBackward, 0);
+}
+void robotRight(char turnRate){ //use char for memory saving
+    digitalWrite(leftMotorForward, 255-turnRate);
+    digitalWrite(rightMotorForward, 255);
+    digitalWrite(leftMotorBackward, 0);
+    digitalWrite(rightMotorBackward, 0);
+}
+
+void slapObstacle(){
+
+}
+
+inline void setup() {
     Serial.begin(115200);
     pinMode(leftmostSensor, INPUT);
     pinMode(leftSensor, INPUT);
     pinMode(middleSensor, INPUT);
     pinMode(rightSensor, INPUT);
-
     pinMode(rightmostSensor, INPUT);
+
     pinMode(leftMotorForward, OUTPUT);
     pinMode(leftMotorBackward, OUTPUT);
     pinMode(rightMotorForward, OUTPUT);
     pinMode(rightMotorBackward, OUTPUT);
 
     pinMode(servoMotor, OUTPUT);
-
+    robotStop();
 }
 
 void loop() {
