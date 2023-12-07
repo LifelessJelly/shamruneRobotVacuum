@@ -40,6 +40,22 @@ void robotRight(char turnRate){ //use char for memory saving
 void slapObstacle(){
 
 }
+void sendServoUpdate(){ //send update every 20ms
+
+}
+bool* readSensor() { //store sensor data in a bool array
+    static bool sensorData[]
+            {static_cast<bool>(digitalRead(leftmostSensor)),
+             static_cast<bool>(digitalRead(leftSensor)),
+             static_cast<bool>(digitalRead(middleSensor)),
+             static_cast<bool>(digitalRead(rightSensor)),
+             static_cast<bool>(digitalRead(rightmostSensor))};
+    return sensorData;
+}
+
+void decideMove(bool* sensorReadings){
+
+}
 
 inline void setup() {
     Serial.begin(115200);
@@ -59,5 +75,7 @@ inline void setup() {
 }
 
 void loop() {
+
+
 
 }
