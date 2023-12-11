@@ -104,7 +104,7 @@ void slapObstacle(){
 }
 
 // reads the sensor and returns a byte containing 5 bits
-std::bitset<5> readSensor() { //store sensor data in a bool array
+std::bitset<5> readSensor() { 
     std::bitset<5> sensorBits;
     sensorBits[0] = static_cast<bool>(digitalRead(rightmostSensor));
     sensorBits[1] = static_cast<bool>(digitalRead(rightSensor));
