@@ -69,7 +69,7 @@ std::bitset<5> readSensor() { //store sensor data in a bool array
     return sensorBits;
 }
 
-void decideMove(std::bitset<5> sensorReadings){
+void decideMove(const std::bitset<5>& sensorReadings){
     static std::uint8_t turnRate {};
     static std::int8_t turnFasterOrSlower {};
 
