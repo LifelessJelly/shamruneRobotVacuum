@@ -225,7 +225,7 @@ void decideMove(const std::bitset<5>& sensorReadings){
 }
 
 // inline because funny optimisation trick
-inline void setup() {
+void setup() {
     Serial.begin(115200);
     pinMode(leftmostSensor, INPUT);
     pinMode(leftSensor, INPUT);
