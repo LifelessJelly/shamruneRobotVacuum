@@ -224,7 +224,7 @@ void decideMove(const std::bitset<5>& sensorReadings){
     previousTurnSpeed = currentTurnSpeed;
 }
 
-// inline because funny optimisation trick
+
 void setup() {
     Serial.begin(115200);
     pinMode(leftmostSensor, INPUT);
