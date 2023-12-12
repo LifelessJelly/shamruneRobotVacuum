@@ -78,6 +78,7 @@ void robotForward(){
 void robotLeft(std::uint8_t turnRate, std::uint8_t turnCap){
     checkIfServoTime();
     digitalWrite(leftMotorForward, 255);
+    // funny branchless statement (minus by value if value less than turncap, if not minus by turncap)
     digitalWrite(rightMotorForward, 255-(turnRate*(turnRate < turnCap) + turnCap*(turnRate >= turnCap)));
     digitalWrite(leftMotorBackward, 0);
     digitalWrite(rightMotorBackward, 0);
@@ -87,6 +88,7 @@ void robotLeft(std::uint8_t turnRate, std::uint8_t turnCap){
 // basically the same thing but for the right-facing direction
 void robotRight(std::uint8_t turnRate, std::uint8_t turnCap){
     checkIfServoTime();
+    // another funny branchless statement
     digitalWrite(leftMotorForward, 255-(turnRate*(turnRate < turnCap) + turnCap*(turnRate >= turnCap)));
     digitalWrite(rightMotorForward, 255);
     digitalWrite(leftMotorBackward, 0);
