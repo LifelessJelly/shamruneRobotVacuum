@@ -27,17 +27,19 @@
 static std::uint8_t currentTurnSpeed {0};
 static std::uint8_t previousTurnSpeed {0};
 static std::uint32_t previousTime {0};
-std::uint16_t servoUptime {0};
+std::uint16_t nextServoUptime {1450};
+std::uint16_t currentServoUptime {};
 
-
+void checkIfServoTime();
+void robotStop();
+void robotForward();
+void robotLeft(std::uint8_t turnRate, std::uint8_t turnCap);
+void robotRight(std::uint8_t turnRate, std::uint8_t turnCap);
+void slapObstacle();
+std::bitset<5> readSensor();
+void waitForServoTime();
 // sends an update to the servo motor (every 20 milliseconds should either tell it to do something or don't do anything)
-void servoUpdate(){ //send update every 20ms
-    digitalWrite(servoMotor, HIGH);
-    delayMicroseconds(servoUptime);
-    digitalWrite(servoMotor, LOW);
-    //some code here
-    servoUptime = 0;
-}
+
 
 /*
 checkIfServoTime checks whether 20ms (or the respective servo downtime) has elapsed, then updates the servo.
@@ -46,11 +48,29 @@ just like coming back and forth from the microwave to check if your raw egg has 
 other stuff
  */
 void checkIfServoTime(){
+    static bool On = true;
     // use micros() to check whether it has been 20ms
-    std::uint32_t time {micros()};
-    if (time - previousTime > 20000-servoUptime){
-        previousTime = time;
-        servoUpdate();
+    std::uint32_t timeElapsed {micros()};
+    if (On) {
+        if (timeElapsed - previousTime > 20000 - currentServoUptime) {
+            digitalWrite(servoMotor, LOW);
+            On = false;
+        }
+    }
+    else {
+        if (timeElapsed - previousTime > 20000){
+            previousTime = timeElapsed;
+            digitalWrite(servoMotor, HIGH);
+            return;
+        }
+    }
+}
+
+
+void waitForServoTime(){
+    static std::uint32_t thisTime = previousTime;
+    while (thisTime == previousTime){
+        checkIfServoTime();
     }
 }
 
@@ -98,11 +118,16 @@ void robotRight(std::uint8_t turnRate, std::uint8_t turnCap){
 
 // slaps the obstacle when it reaches a black stop line
 void slapObstacle(){
-    robotStop();
     checkIfServoTime();
-    servoUptime = 2300;
-    delayMicroseconds((20000-servoUptime) - (previousTime - micros()) - LOOKAHEAD_TIME_MICROSEC);
+    nextServoUptime = 600;
+    waitForServoTime();
+    currentServoUptime = nextServoUptime;
     checkIfServoTime();
+    nextServoUptime = 2300;
+    waitForServoTime();
+    currentServoUptime = nextServoUptime;
+    checkIfServoTime();
+    nextServoUptime = 1450;
 }
 
 // reads the sensor and returns a byte containing 5 bits
@@ -242,11 +267,12 @@ void setup() {
 
     pinMode(servoMotor, OUTPUT);
     robotStop();
-
     delay(20);
+    previousTime = micros();
+    digitalWrite(servoMotor, HIGH);
 }
 
 void loop() {
-    checkIfServoTime();
+    currentServoUptime = nextServoUptime;
     decideMove(readSensor());
 }
