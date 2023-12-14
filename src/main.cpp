@@ -38,7 +38,7 @@ void robotRight(std::uint8_t turnRate, std::uint8_t turnCap);
 void slapObstacle();
 std::bitset<5> readSensor();
 void waitForServoTime();
-// sends an update to the servo motor (every 20 milliseconds should either tell it to do something or don't do anything)
+
 
 
 /*
@@ -48,11 +48,13 @@ just like coming back and forth from the microwave to check if your raw egg has 
 other stuff
  */
 void checkIfServoTime(){
-    static bool On = true;
+    Serial.println("checking for update");
+    static bool On {true};
     // use micros() to check whether it has been 20ms
     std::uint32_t timeElapsed {micros()};
     if (On) {
         if (timeElapsed - previousTime > 20000 - currentServoUptime) {
+            Serial.println("servo going LOW");
             digitalWrite(servoMotor, LOW);
             On = false;
         }
@@ -60,7 +62,9 @@ void checkIfServoTime(){
     else {
         if (timeElapsed - previousTime > 20000){
             previousTime = timeElapsed;
+            Serial.println("servo going HIGH");
             digitalWrite(servoMotor, HIGH);
+            On = true;
             return;
         }
     }
@@ -68,6 +72,7 @@ void checkIfServoTime(){
 
 
 void waitForServoTime(){
+    Serial.println("waiting for next servo instruction");
     static std::uint32_t thisTime = previousTime;
     while (thisTime == previousTime){
         checkIfServoTime();
@@ -77,6 +82,7 @@ void waitForServoTime(){
 // tells the robot to stop
 void robotStop(){
     checkIfServoTime();
+    Serial.println("stopping");
     digitalWrite(leftMotorForward, 255);
     digitalWrite(rightMotorForward, 255);
     digitalWrite(leftMotorBackward, 255);
@@ -87,6 +93,7 @@ void robotStop(){
 // tells the robot to move forward
 void robotForward(){
     checkIfServoTime();
+    Serial.println("moving forward");
     digitalWrite(leftMotorForward, 255);
     digitalWrite(rightMotorForward, 255);
     digitalWrite(leftMotorBackward, 0);
@@ -97,6 +104,7 @@ void robotForward(){
 // tells the robot to move left with a dynamic turn rate cap, so it doesn't overturn
 void robotLeft(std::uint8_t turnRate, std::uint8_t turnCap){
     checkIfServoTime();
+    Serial.println("turning left");
     digitalWrite(leftMotorForward, 255);
     // funny branchless statement (minus by value if value less than turncap, if not minus by turncap)
     digitalWrite(rightMotorForward, 255-(turnRate*(turnRate < turnCap) + turnCap*(turnRate >= turnCap)));
@@ -108,6 +116,7 @@ void robotLeft(std::uint8_t turnRate, std::uint8_t turnCap){
 // basically the same thing but for the right-facing direction
 void robotRight(std::uint8_t turnRate, std::uint8_t turnCap){
     checkIfServoTime();
+    Serial.println("turning right");
     // another funny branchless statement
     digitalWrite(leftMotorForward, 255-(turnRate*(turnRate < turnCap) + turnCap*(turnRate >= turnCap)));
     digitalWrite(rightMotorForward, 255);
@@ -118,16 +127,23 @@ void robotRight(std::uint8_t turnRate, std::uint8_t turnCap){
 
 // slaps the obstacle when it reaches a black stop line
 void slapObstacle(){
+    Serial.println("slapping obstacle sequence");
     checkIfServoTime();
+    Serial.println("servo going 0 degrees");
     nextServoUptime = 600;
-    waitForServoTime();
+    waitForServoTime();                     // waits until 1.45ms pulse width is done
+    currentServoUptime = nextServoUptime;   // currentServoUptime = 600
+    checkIfServoTime();                     // calls the check here just for fun I don't think it does anything
+    Serial.println("servo going 180 degrees");
+    nextServoUptime = 2300;                 // queue the next servo uptime to 2.3ms
+    waitForServoTime();                     // waits until the 0.6ms pulse width is done
+    currentServoUptime = nextServoUptime;   // currentServoUptime = 2300
+    checkIfServoTime();                     // also doesn't do much I think
+    Serial.println("servo going 90 degrees");
+    nextServoUptime = 1450;                 // queue the next servo uptime back to 1.45ms (normal operation)
+    waitForServoTime();                     // waits until the 2.3ms pulse width is done
     currentServoUptime = nextServoUptime;
-    checkIfServoTime();
-    nextServoUptime = 2300;
-    waitForServoTime();
-    currentServoUptime = nextServoUptime;
-    checkIfServoTime();
-    nextServoUptime = 1450;
+    // goes back to robotForward() then to loop()
 }
 
 // reads the sensor and returns a byte containing 5 bits
@@ -166,6 +182,8 @@ void decideMove(const std::bitset<5>& sensorReadings){
             turnRate = 0;
             robotStop();
             slapObstacle();
+            robotForward();
+            // if bot doesn't move fully out of the black line, add a delay() here
             break;
         }   // A wild obstacle has appeared!                 [sensor: 00000]
         case 19: {
@@ -246,6 +264,7 @@ void decideMove(const std::bitset<5>& sensorReadings){
         }  // Rapidly accelerate going right                [sensor: 11100]
         default: {
             robotStop();
+            break;
         }  // Robot either went off course or reached the end
     }
     previousTurnSpeed = currentTurnSpeed;
@@ -273,6 +292,11 @@ void setup() {
 }
 
 void loop() {
+    uint32_t startTime = micros();
     currentServoUptime = nextServoUptime;
     decideMove(readSensor());
+    uint32_t totalTime = micros() - startTime;
+    totalTime /= 1000;
+    Serial.print("Total time for one loop = ");
+    Serial.println(totalTime);
 }
