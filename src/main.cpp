@@ -141,6 +141,8 @@ void decideMove(const std::bitset<5>& sensorReadings){
             turnRate = 0;
             robotStop();
             slapObstacle();
+            robotForward();
+            // if bot doesn't move out of the black line, add a delay() here
             break;
         }   // A wild obstacle has appeared!                 [sensor: 00000]
         case 19: {
