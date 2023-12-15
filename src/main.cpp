@@ -57,31 +57,31 @@ void checkIfServoTime(){
 // tells the robot to stop
 void robotStop(){
     checkIfServoTime();
-    digitalWrite(leftMotorForward, 255);
-    digitalWrite(rightMotorForward, 255);
-    digitalWrite(leftMotorBackward, 255);
-    digitalWrite(rightMotorBackward, 255);
+    analogWrite(leftMotorForward, 255);
+    analogWrite(rightMotorForward, 255);
+    analogWrite(leftMotorBackward, 255);
+    analogWrite(rightMotorBackward, 255);
     checkIfServoTime();
 }
 
 // tells the robot to move forward
 void robotForward(){
     checkIfServoTime();
-    digitalWrite(leftMotorForward, 255);
-    digitalWrite(rightMotorForward, 255);
-    digitalWrite(leftMotorBackward, 0);
-    digitalWrite(rightMotorBackward, 0);
+    analogWrite(leftMotorForward, 255);
+    analogWrite(rightMotorForward, 255);
+    analogWrite(leftMotorBackward, 0);
+    analogWrite(rightMotorBackward, 0);
     checkIfServoTime();
 }
 
 // tells the robot to move left with a dynamic turn rate cap, so it doesn't overturn
 void robotLeft(std::uint8_t turnRate, std::uint8_t turnCap){
     checkIfServoTime();
-    digitalWrite(leftMotorForward, 255);
+    analogWrite(leftMotorForward, 255);
     // funny branchless statement (minus by value if value less than turncap, if not minus by turncap)
-    digitalWrite(rightMotorForward, 255-(turnRate*(turnRate < turnCap) + turnCap*(turnRate >= turnCap)));
-    digitalWrite(leftMotorBackward, 0);
-    digitalWrite(rightMotorBackward, 0);
+    analogWrite(rightMotorForward, 255-(turnRate*(turnRate < turnCap) + turnCap*(turnRate >= turnCap)));
+    analogWrite(leftMotorBackward, 0);
+    analogWrite(rightMotorBackward, 0);
     checkIfServoTime();
 }
 
@@ -89,10 +89,10 @@ void robotLeft(std::uint8_t turnRate, std::uint8_t turnCap){
 void robotRight(std::uint8_t turnRate, std::uint8_t turnCap){
     checkIfServoTime();
     // another funny branchless statement
-    digitalWrite(leftMotorForward, 255-(turnRate*(turnRate < turnCap) + turnCap*(turnRate >= turnCap)));
-    digitalWrite(rightMotorForward, 255);
-    digitalWrite(leftMotorBackward, 0);
-    digitalWrite(rightMotorBackward, 0);
+    analogWrite(leftMotorForward, 255-(turnRate*(turnRate < turnCap) + turnCap*(turnRate >= turnCap)));
+    analogWrite(rightMotorForward, 255);
+    analogWrite(leftMotorBackward, 0);
+    analogWrite(rightMotorBackward, 0);
     checkIfServoTime();
 }
 
