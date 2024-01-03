@@ -18,13 +18,13 @@
 
 //Tweak the turn values here
 #define SLOW_TURN 200
-#define MED_TURN 230
+#define MED_TURN 235
 #define FAST_TURN 255
-#define SLOW_ACCEL 25 
+#define SLOW_ACCEL 30 
 #define SLOW_DECEL -SLOW_ACCEL
-#define MED_ACCEL 35
+#define MED_ACCEL 50
 #define MED_DECEL -MED_ACCEL
-#define FAST_ACCEL 45 
+#define FAST_ACCEL 100 
 #define FAST_DECEL -FAST_ACCEL
 #define LOOKAHEAD_TIME_MICROSEC 1
 
@@ -65,7 +65,7 @@ int decideMove(const std::bitset<5>& sensorReadings){
     std::uint16_t delta = servoSignal(DEG90_SLAP);
 
     if (followThrough > 0) {
-        data = previousData;
+        data = previousData == 0 ? 4 : previousData; // seems to get stuck sometimes, not sure why, so this will get it to budge
         followThrough--;
     }
     switch (data) {
@@ -79,44 +79,44 @@ int decideMove(const std::bitset<5>& sensorReadings){
             int elapsed = 0;
             robotStop();                
             delayMicroseconds(delta);
-            while (elapsed < 150) {
-                std::uint16_t delta2 = servoSignal(slapDirection);
+            while (elapsed < 10) {
+                std::uint16_t delta2 = servoSignal(restingDirection);
                 robotStop();
                 delayMicroseconds(delta2);
                 elapsed++;
             }
             elapsed = 0;
-            while (elapsed < 20) {
-                std::uint16_t delta2 = servoSignal(restingDirection);
+            while (elapsed < 100) {
+                std::uint16_t delta2 = servoSignal(slapDirection);
+                robotStop();
                 delayMicroseconds(delta2);
                 elapsed++;
             }
-            followThrough = 80;
-            delta = servoSignal(restingDirection);
+            followThrough = 90;
             alternateSlap();
-            // if bot doesn't move out of the black line, add a delay() here
+            delta = servoSignal(restingDirection);
             break;
         }  
-        case 19: {
-            // Slowly accelerate/decelerate going left       [sensor: 10011]
+        case 19: case 23: {
+            // Slowly accelerate/decelerate going left       [sensor: 10011] [10111]
             turnRateL = accelTo(turnRateL, SLOW_TURN, SLOW_ACCEL, MED_DECEL);
             robotLeft(turnRateL, SLOW_TURN);
             break;
         }  
-        case 25: {
-            // Slowly accelerate/decelerate going right      [sensor: 11001]
+        case 25: case 29: {
+            // Slowly accelerate/decelerate going right      [sensor: 11001] [11101]
             turnRateR = accelTo(turnRateR, SLOW_TURN, SLOW_ACCEL, MED_DECEL);
             robotRight(turnRateR, SLOW_TURN);
             break;
         }  
-        case 23: case 3: case 11: {
-            // Moderately accelerate/decelerate going left [10111] [00011] [01011]
+        case 3: case 11: {
+            // Moderately accelerate/decelerate going left [00011] [01011]
             turnRateL = accelTo(turnRateL, MED_TURN, MED_ACCEL, FAST_DECEL);
             robotLeft(turnRateL, MED_TURN);
             break;
         }   
-        case 29: case 24: case 26: { 
-            // Moderately accelerate/decelerate going right  [11101] [11000] [11010]
+        case 24: case 26: { 
+            // Moderately accelerate/decelerate going right  [11000] [11010]
             turnRateR = accelTo(turnRateR, MED_TURN, MED_ACCEL, FAST_DECEL);
             robotRight(turnRateR, MED_TURN);
             break;
