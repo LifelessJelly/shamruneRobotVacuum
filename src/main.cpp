@@ -1,6 +1,5 @@
 #include <Arduino.h>
-#include <bitset>
-#include <cstdint>
+#include <bitset> // for std::bitset<size_t>
 
 #define DEBUG_PRINT_SENSOR false
 #define DEBUG_PRINT_MOTORVAL false
@@ -21,18 +20,17 @@
 #define MED_TURN 235
 #define FAST_TURN 255
 #define SLOW_ACCEL 30 
-#define SLOW_DECEL -SLOW_ACCEL
+#define SLOW_DECEL (-SLOW_ACCEL)
 #define MED_ACCEL 50
-#define MED_DECEL -MED_ACCEL
+#define MED_DECEL (-MED_ACCEL)
 #define FAST_ACCEL 100 
-#define FAST_DECEL -FAST_ACCEL
+#define FAST_DECEL (-FAST_ACCEL)
 #define LOOKAHEAD_TIME_MICROSEC 1
 
 #define DEG0_SLAP 600
-#define DEG90_SLAP 1450
+#define DEG90_SLAP 1400
 #define DEG180_SLAP 2300
 
-std::uint16_t servoUptime{0};
 std::uint8_t turnRateL {0};
 std::uint8_t turnRateR {0};
 
