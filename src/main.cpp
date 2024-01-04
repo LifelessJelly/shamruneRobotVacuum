@@ -106,7 +106,7 @@ int decideMove(const std::bitset<5>& sensorReadings){
                 robotStop();
                 ++elapsed;
             }
-            followThrough = 55;
+            followThrough = 65;
             delta = servoSignal(restingDirection);
             break;
         }  
