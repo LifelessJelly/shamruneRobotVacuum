@@ -27,7 +27,7 @@
 #define FAST_DECEL (-FAST_ACCEL)
 #define LOOKAHEAD_TIME_MICROSEC 1
 
-#define DEG0_SLAP 600
+#define DEG0_SLAP 550
 #define DEG90_SLAP 1400
 #define DEG180_SLAP 2300
 
@@ -53,8 +53,10 @@ int accelTo(int current, int goal, int accel, int decel) {
 }
 
 std::uint8_t previousData;
-int followThrough;
-int slapDirection{DEG180_SLAP}, restingDirection{DEG90_SLAP};
+int followThrough {};
+int restingDirection{DEG90_SLAP};
+int slapDirection {DEG0_SLAP};
+
 int getOppDirection(int dir);
 void alternateSlap();
 // decides all the moves based on the sensor readings
@@ -63,7 +65,7 @@ int decideMove(const std::bitset<5>& sensorReadings){
     std::uint16_t delta = servoSignal(DEG90_SLAP);
 
     if (followThrough > 0) {
-        data = previousData == 0 ? 4 : previousData; // seems to get stuck sometimes, not sure why, so this will get it to budge
+        data = 17; // seems to get stuck sometimes, not sure why, so this will get it to budge
         followThrough--;
     }
     switch (data) {
@@ -74,70 +76,79 @@ int decideMove(const std::bitset<5>& sensorReadings){
         }
         case 0: {
             // A wild obstacle has appeared! [sensor: 00000]
-            int elapsed = 0;
             robotStop();                
             delayMicroseconds(delta);
-            while (elapsed < 10) {
+            int elapsed = 0;
+            while (elapsed < 25) {
                 std::uint16_t delta2 = servoSignal(restingDirection);
-                robotStop();
                 delayMicroseconds(delta2);
-                elapsed++;
+                robotStop();
+                ++elapsed;
             }
             elapsed = 0;
-            while (elapsed < 100) {
-                std::uint16_t delta2 = servoSignal(slapDirection);
-                robotStop();
+            while (elapsed < 60) {
+                std::uint16_t delta2 = servoSignal(DEG0_SLAP);
                 delayMicroseconds(delta2);
-                elapsed++;
+                robotStop();
+                ++elapsed;
             }
-            followThrough = 90;
-            alternateSlap();
+            elapsed = 0;
+            while (elapsed < 25) {
+                std::uint16_t delta2 = servoSignal(restingDirection);
+                delayMicroseconds(delta2);
+                robotStop();
+                ++elapsed;
+            }
+            elapsed = 0;
+            while (elapsed < 60) {
+                std::uint16_t delta2 = servoSignal(DEG180_SLAP);
+                delayMicroseconds(delta2);
+                robotStop();
+                ++elapsed;
+            }
+            followThrough = 55;
             delta = servoSignal(restingDirection);
             break;
         }  
         case 19: case 23: {
             // Slowly accelerate/decelerate going left       [sensor: 10011] [10111]
-            turnRateL = accelTo(turnRateL, SLOW_TURN, SLOW_ACCEL, MED_DECEL);
+            turnRateL = accelTo(turnRateL, SLOW_TURN, SLOW_ACCEL, FAST_DECEL);
             robotLeft(turnRateL, SLOW_TURN);
             break;
         }  
         case 25: case 29: {
             // Slowly accelerate/decelerate going right      [sensor: 11001] [11101]
-            turnRateR = accelTo(turnRateR, SLOW_TURN, SLOW_ACCEL, MED_DECEL);
+            turnRateR = accelTo(turnRateR, SLOW_TURN, SLOW_ACCEL, FAST_DECEL);
             robotRight(turnRateR, SLOW_TURN);
             break;
         }  
         case 3: case 11: {
-            // Moderately accelerate/decelerate going left [00011] [01011]
+            // mid accel left
             turnRateL = accelTo(turnRateL, MED_TURN, MED_ACCEL, FAST_DECEL);
-            robotLeft(turnRateL, MED_TURN);
-            break;
-        }   
-        case 24: case 26: { 
-            // Moderately accelerate/decelerate going right  [11000] [11010]
-            turnRateR = accelTo(turnRateR, MED_TURN, MED_ACCEL, FAST_DECEL);
-            robotRight(turnRateR, MED_TURN);
+            robotLeft(turnRateL, SLOW_TURN);
             break;
         }  
-        case 15: case 7: {
-            // Rapidly accelerate going left [sensor: 01111] [sensor: 00111]
+        case 24: case 26: {
+            // mid accel right
+            turnRateR = accelTo(turnRateR, MED_TURN, MED_ACCEL, FAST_DECEL);
+            robotRight(turnRateR, SLOW_TURN);
+            break;
+        }  
+        case 15: case 7: case 1: {
+            // Rapidly accelerate going left [sensor: 01111] [sensor: 00111] [00001]
             turnRateL = accelTo(turnRateL, FAST_TURN, FAST_ACCEL, FAST_DECEL);
             robotLeft(turnRateL, FAST_TURN);
             break;
         }   
-        case 30: case 28: {
-            // Rapidly accelerate going right [11110] [11100]
+        case 30: case 28: case 16: {
+            // Rapidly accelerate going right [11110] [11100] [10000]
             turnRateR = accelTo(turnRateR, FAST_TURN, FAST_ACCEL, FAST_DECEL);
             robotRight(turnRateR, FAST_TURN);
             break;
         }  
-        case 1: case 16: {
-            // edge case, just continue forward [00001][10000]
-            robotForward();
-            break;
-        }
         case 31: // [11111]
         {
+            followThrough = 50;
             robotStop();
             break;
         }
@@ -148,7 +159,7 @@ int decideMove(const std::bitset<5>& sensorReadings){
         }  
 
     }
-    if (data != 0)
+    if (data != 0 && data != 31)
         previousData = data;
     delayMicroseconds(delta);
     return data;
@@ -170,7 +181,7 @@ void setup() {
     pinMode(servoMotor, OUTPUT);
     robotStop();
 
-    delay(20);
+    delayMicroseconds(20000);
 }
 
 void loop() {
@@ -199,10 +210,7 @@ void robotRight(std::uint8_t turnRate, std::uint8_t turnCap){
 }
 
 void alternateSlap() {
-    slapDirection = getOppDirection(slapDirection);
-}
-int getOppDirection(int dir) {
-    return dir == DEG180_SLAP ? DEG0_SLAP : DEG180_SLAP;
+    slapDirection = !slapDirection;
 }
 // function to set the motor pins
 void motorPin(std::uint8_t LMF, std::uint8_t RMF, std::uint8_t LMB, std::uint8_t RMB) {
