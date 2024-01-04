@@ -79,14 +79,14 @@ int decideMove(const std::bitset<5>& sensorReadings){
             robotStop();                
             delayMicroseconds(delta);
             int elapsed = 0;
-            while (elapsed < 25) {
+            while (elapsed < 10) {
                 std::uint16_t delta2 = servoSignal(restingDirection);
                 delayMicroseconds(delta2);
                 robotStop();
                 ++elapsed;
             }
             elapsed = 0;
-            while (elapsed < 60) {
+            while (elapsed < 50) {
                 std::uint16_t delta2 = servoSignal(DEG0_SLAP);
                 delayMicroseconds(delta2);
                 robotStop();
@@ -100,7 +100,7 @@ int decideMove(const std::bitset<5>& sensorReadings){
                 ++elapsed;
             }
             elapsed = 0;
-            while (elapsed < 60) {
+            while (elapsed < 50) {
                 std::uint16_t delta2 = servoSignal(DEG180_SLAP);
                 delayMicroseconds(delta2);
                 robotStop();
