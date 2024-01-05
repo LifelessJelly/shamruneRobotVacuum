@@ -54,7 +54,7 @@ int accelTo(int current, int goal, int accel, int decel) {
 
 std::uint8_t previousData;
 int followThrough {0};
-int restingDirection{DEG90_SLAP};
+int volatile restingDirection{DEG90_SLAP};
 int slapDirection {DEG180_SLAP};
 
 int getOppDirection(int dir);
@@ -62,16 +62,12 @@ void alternateSlap();
 int phase = 0, elapsed = 0, debounce = 0;
 // decides all the moves based on the sensor readings
 int decideMove(const std::bitset<5>& sensorReadings){
-    int final_direction = restingDirection;
-    if (phase == 2) {
-        final_direction = slapDirection;
-    }
+    int final_direction = phase == 2 ? slapDirection : restingDirection;
     std::uint8_t data {sensorReadings.to_uint8()};
     std::uint16_t delta = servoSignal(final_direction);
 
-    debounce--;
     elapsed--;
-    //Serial.println(phase);
+    debounce--;
     switch (data) {
         case 17: case 27: { 
             // Go forward [sensor: 10001] [sensor: 11011]
@@ -80,13 +76,14 @@ int decideMove(const std::bitset<5>& sensorReadings){
         }
         case 0: {
             // A wild obstacle has appeared! [sensor: 00000]
-            if (debounce > 0) {robotForward(); break;};
+            if (debounce > 0) {robotForward(); break;}
             if (phase == 0) {
                 phase = 1;
-                elapsed = 10;
+                elapsed = 15;
                 robotForward();
             } else if (phase == 1) {
                 robotStop();
+                
                 if (elapsed <= 0) {
                     phase = 2;
                     elapsed = 30;
@@ -96,17 +93,16 @@ int decideMove(const std::bitset<5>& sensorReadings){
                 if (elapsed <= 0) {
                     phase = 3;
                     elapsed = 60;
-                    alternateSlap();
                 }
             } else if (phase == 3) {
-                robotForward();
                 if (elapsed <= 0) {
                     phase = 0;
-                    debounce = 20;
+                    alternateSlap();
+                    //debounce = 10;
                 }
+                robotForward();
             }
             break;
-
         }  
         case 19: case 23: {
             // Slowly accelerate/decelerate going left       [sensor: 10011] [10111]
@@ -205,7 +201,7 @@ void robotRight(std::uint8_t turnRate, std::uint8_t turnCap){
 }
 
 void alternateSlap() {
-    slapDirection = slapDirection == DEG0_SLAP ? DEG180_SLAP : DEG0_SLAP;
+    slapDirection = ((slapDirection == DEG0_SLAP) ? DEG180_SLAP : DEG0_SLAP);
 }
 // function to set the motor pins
 void motorPin(std::uint8_t LMF, std::uint8_t RMF, std::uint8_t LMB, std::uint8_t RMB) {
