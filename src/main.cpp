@@ -83,13 +83,13 @@ int decideMove(const std::bitset<5>& sensorReadings){
             if (debounce > 0) {robotForward(); break;};
             if (phase == 0) {
                 phase = 1;
-                elapsed = 15;
-                robotStop();
+                elapsed = 10;
+                robotForward();
             } else if (phase == 1) {
                 robotStop();
                 if (elapsed <= 0) {
                     phase = 2;
-                    elapsed = 35;
+                    elapsed = 30;
                 }
             } else if (phase == 2) {
                 robotStop();
@@ -102,6 +102,7 @@ int decideMove(const std::bitset<5>& sensorReadings){
                 robotForward();
                 if (elapsed <= 0) {
                     phase = 0;
+                    debounce = 20;
                 }
             }
             break;
