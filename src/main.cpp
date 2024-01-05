@@ -214,10 +214,10 @@ void alternateSlap() {
 }
 // function to set the motor pins
 void motorPin(std::uint8_t LMF, std::uint8_t RMF, std::uint8_t LMB, std::uint8_t RMB) {
-    analogWrite(leftMotorForward, LMF);
     analogWrite(rightMotorForward, RMF);
-    analogWrite(leftMotorBackward, LMB);
+    analogWrite(leftMotorForward, LMF);
     analogWrite(rightMotorBackward, RMB);
+    analogWrite(leftMotorBackward, LMB);
     #if DEBUG_PRINT_MOTORVAL
         Serial.print(LMF); Serial.print(RMF); Serial.print(LMB); Serial.println(RMB);
     #endif
